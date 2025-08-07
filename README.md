@@ -12,3 +12,4 @@ This repository includes:
   - Ecological Analysis Data Cleaning File: This file includes most of the data cleaning and the MICE method for imputations into the missing polygyny estimates.
   - Ecological Analysis Phylogenetic Tree Prep: This file includes all the code to clean and prune the phylogenetic tree.
   - Ecological Analysis pPCA Latent variable creation: This file includes the code to conduct a phyolgenetically controlled principal components analysis for the purpose of latent variable creation.
+  - Ecological Analysis Phylogenetic Variance: This file includes the code to calculate the R2 of the phyolgenetic variance. In essence this file calculate the phylogenetic signal.
