@@ -9,4 +9,5 @@ This repository includes:
 2. Master's data set: This is the cleaned and compiled dataset in a CSV file.
 
 3. R Code: This is the RMD files of the R code to complete the ecological analysis in this thesis. They include:
-  - Ecological Analysis Data Cleaning File: THis file includes most of the data cleaning and the MICE method for imputations into the missing polygyny estimates.
+  - Ecological Analysis Data Cleaning File: This file includes most of the data cleaning and the MICE method for imputations into the missing polygyny estimates.
+  - Ecological Analysis Phylogenetic Tree Prep: This file includes all the code to clean and prune the phylogenetic tree. 
