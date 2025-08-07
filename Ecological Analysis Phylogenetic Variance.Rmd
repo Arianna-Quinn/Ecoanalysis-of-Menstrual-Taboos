@@ -1,0 +1,200 @@
+---
+title: "Untitled"
+output: html_document
+date: "2025-06-26"
+---
+
+```{r load packages}
+library(phytools)
+library(psych)
+library(GPArotation)
+library(corpcor)
+library(ape)
+library(brms)
+library(geiger)
+library(mice)
+library(tidyverse)
+library(reshape2)
+library(ggridges)
+library(bayesplot)
+library(hexbin)
+```
+
+```{r load data and vcv}
+Combo.df <- readRDS("~/Desktop/Menstrual taboos/R CODE DATA FILES (USE)/combo_df.rds")
+phylo.reduced <- readRDS("~/Desktop/Menstrual taboos/R CODE DATA FILES (USE)/phylo_vcv.rds")
+```
+
+```{r clean}
+Combo.df$Presence <- factor(Combo.df$Expression, labels = c("Absence of Menstrual Taboos", "Presence of Menstrual Taboos"))
+Combo.df$Restriction <- ordered(Combo.df$Restrictiveness, labels = c("Absence", "Minimally Restrictive", "Moderately Restrictive", "Severely Restrictive"))
+Combo.df$Subsistence <- factor(Combo.df$Subsistence, levels = c("Agriculture", "Horticulture", "Pastoralism", "Hunter-Gatherers"),
+                                labels = c("Agriculture", "Horticulture", "Pastoralism", "Hunter-Gatherers"))
+Combo.df$Subsistence <- relevel(Combo.df$Subsistence, ref = "Agriculture")
+Combo.df$Biome <- factor(Combo.df$Landscape, levels = c("Deserts", "Forests", "Grasslands", "Tundra"),
+                          labels = c("Deserts", "Forests", "Grasslands", "Tundra"))
+Combo.df$Biome <- relevel(Combo.df$Biome, ref = "Forests")
+Combo.df$Men_Poly.s <- scale(Combo.df$Men_Poly)
+```
+
+#CALCULATING THE VARIANCE EXPLAINED BY THE PHYLOGENY
+```{r P3 prior list}
+#Creating the priors for the model
+prior_list2 <- get_prior(Presence ~ PC1 + PC2 + Subsistence + Men_Poly.s + Biome + (1|gr(tip.label, cov = phylo.reduced)),
+              data=Combo.df, 
+              family=bernoulli(link="logit"), 
+              save_pars = save_pars(all = TRUE),
+              data2 = list(phylo.reduced = phylo.reduced))
+
+prior_list2[1,1] <- "normal(0,1)" #Weakly informative priors
+
+prior_list2
+```
+
+```{r presence model}
+Presence.Biome <- brm(
+  Presence ~ PC1 + PC2 + Subsistence + Men_Poly.s + Biome + (1 | gr(tip.label, cov = phylo.reduced)),
+   data = Combo.df,
+  family = bernoulli(link = "logit"),
+  chains = 4,
+  iter = 3000,
+  control = list(adapt_delta = .99),
+  data2 = list(phylo.reduced = phylo.reduced),
+  prior = prior_list2)
+```
+
+```{r phylogenetic signal presence}
+vc <- VarCorr(Presence.Biome)
+
+# Inspect: this is a 1-row matrix with 4 named columns
+vc[[1]]$sd
+
+# Correct: pick just the Estimate
+phylo_sd <- vc[[1]]$sd[ , "Estimate"]  # <- NOT as.numeric(all)
+
+# Square to get variance
+phylo_var <- phylo_sd^2
+
+# Residual variance for logit link
+residual_var <- (pi^2) / 3
+
+# Final R2
+phylo_R2 <- phylo_var / (phylo_var + residual_var)
+phylo_R2
+
+get_phylo_R2 <- function(brm_model) {
+  vc <- VarCorr(brm_model)
+  # Safely get the first random effect's sd Estimate
+  phylo_sd <- vc[[1]]$sd[ , "Estimate"]
+  phylo_var <- phylo_sd^2
+  residual_var <- (pi^2) / 3  # logit link residual variance
+  phylo_var / (phylo_var + residual_var)
+}
+
+get_phylo_R2(Presence.Biome)
+
+# Inspect:
+VarCorr(Presence.Biome)
+
+# Correct R2:
+vc <- VarCorr(Presence.Biome)
+phylo_sd <- vc[[1]]$sd[ , "Estimate"]
+phylo_var <- phylo_sd^2
+residual_var <- (pi^2) / 3
+phylo_R2 <- phylo_var / (phylo_var + residual_var)
+phylo_R2
+
+# Or reusable:
+get_phylo_R2 <- function(brm_model) {
+  vc <- VarCorr(brm_model)
+  phylo_sd <- vc[[1]]$sd[ , "Estimate"]
+  phylo_var <- phylo_sd^2
+  residual_var <- (pi^2) / 3
+  phylo_var / (phylo_var + residual_var)
+}
+
+get_phylo_R2(Presence.Biome)
+```
+
+```{r R3 prior list}
+#Creating the priors for the model
+prior_list5 <- get_prior(Restriction ~ PC1 + PC2 + Subsistence + Men_Poly.s + Biome + (1|gr(tip.label, cov = phylo.reduced)),
+              data=Combo.df, 
+              family=cumulative(link="logit"), 
+              save_pars = save_pars(all = TRUE),
+              data2 = list(phylo.reduced = phylo.reduced))
+
+prior_list5[1,1] <- "normal(0,1)" #Weakly informative priors
+
+prior_list5
+```
+
+```{r R3 model}
+#Fitting model
+Restriction.Biome <- brm(Restriction ~ PC1 + PC2 + Subsistence + Men_Poly.s + Biome + (1|gr(tip.label, cov = phylo.reduced)),
+              data=Combo.df, 
+              family=cumulative(link="logit"), 
+              save_pars = save_pars(all = TRUE),
+              data2 = list(phylo.reduced = phylo.reduced), 
+              chains=4, 
+              iter = 6000,
+              control = list(adapt_delta = .99),
+              prior = prior_list5)
+```
+
+```{r phylogenetic signal restriction}
+vc <- VarCorr(Restriction.Biome)
+
+# Inspect: this is a 1-row matrix with 4 named columns
+vc[[1]]$sd
+
+# Correct: pick just the Estimate
+phylo_sd <- vc[[1]]$sd[ , "Estimate"]  # <- NOT as.numeric(all)
+
+# Square to get variance
+phylo_var <- phylo_sd^2
+
+# Residual variance for logit link
+residual_var <- (pi^2) / 3
+
+# Final R2
+phylo_R2 <- phylo_var / (phylo_var + residual_var)
+phylo_R2
+
+get_phylo_R2 <- function(brm_model) {
+  vc <- VarCorr(brm_model)
+  # Safely get the first random effect's sd Estimate
+  phylo_sd <- vc[[1]]$sd[ , "Estimate"]
+  phylo_var <- phylo_sd^2
+  residual_var <- (pi^2) / 3  # logit link residual variance
+  phylo_var / (phylo_var + residual_var)
+}
+
+get_phylo_R2(Restriction.Biome)
+
+# Inspect:
+VarCorr(Restriction.Biome)
+
+# Correct R2:
+vc <- VarCorr(Restriction.Biome)
+phylo_sd <- vc[[1]]$sd[ , "Estimate"]
+phylo_var <- phylo_sd^2
+residual_var <- (pi^2) / 3
+phylo_R2 <- phylo_var / (phylo_var + residual_var)
+phylo_R2
+
+# Or reusable:
+get_phylo_R2 <- function(brm_model) {
+  vc <- VarCorr(brm_model)
+  phylo_sd <- vc[[1]]$sd[ , "Estimate"]
+  phylo_var <- phylo_sd^2
+  residual_var <- (pi^2) / 3
+  phylo_var / (phylo_var + residual_var)
+}
+
+get_phylo_R2(Restriction.Biome)
+```
+
+
+
+
