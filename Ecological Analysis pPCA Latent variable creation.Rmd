@@ -1,0 +1,59 @@
+---
+title: "Ecological Analysids pPCA Latent Variable Creation"
+output: html_document
+date: "2025-06-26"
+---
+
+```{r load packages}
+library(phytools)
+library(psych)
+library(GPArotation)
+library(corpcor)
+library(ape)
+library(brms)
+library(geiger)
+library(mice)
+library(tidyverse)
+library(reshape2)
+library(ggridges)
+library(bayesplot)
+library(hexbin)
+```
+
+```{r load data and tree}
+full_data <- readRDS("~/Desktop/Menstrual taboos/R CODE DATA FILES (USE)/full_data.rds")
+phylo.Reduced <- readRDS("~/Desktop/Menstrual taboos/R CODE DATA FILES (USE)/phylo_reduced.rds")
+```
+
+```{r pPCA and scores}
+climate <- scale(subset(full_data, select = MeanMonthlyTemperature:Precipitation_Predictability))
+climate <- as.matrix(climate)
+```
+
+```{r pPCA and scores}
+pPCA <- phyl.pca(phylo.Reduced, climate, mode = "cov", method = "lambda")
+pPCA
+```
+
+```{r pPCA and scores}
+rotation <- GPForth(pPCA$L[,1:2], method = "quartimax")
+C <- vcv.phylo(phylo.Reduced)[rownames(climate), rownames(climate)]
+temp <- phyl.vcv(climate, C, pPCA$lambda)
+a <- t(temp$alpha)
+B <- t(pseudoinverse(rotation$loadings))
+```
+
+```{r pPCA and scores}
+Climate.scores <- data.frame((scale(climate, center = a, scale = FALSE) %*% B))
+Climate.scores$PC1 <- Climate.scores[,1]
+Climate.scores$PC2 <- Climate.scores[,2]
+Climate.scores <- Climate.scores[,c("PC1","PC2")]
+```
+
+```{r pPCA and scores}
+Combo.df <- cbind(full_data, PC1 = Climate.scores$PC1, PC2 = Climate.scores$PC2)
+```
+
+```{r save combo}
+saveRDS(Combo.df, "~/Desktop/Menstrual taboos/R CODE DATA FILES (USE)/combo_df.rds")
+```
