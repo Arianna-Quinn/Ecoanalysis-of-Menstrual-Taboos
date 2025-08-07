@@ -8,7 +8,7 @@ This repository includes:
 
 2._**Master's data set:**_ This is the cleaned and compiled dataset in a CSV file.
 
-3._** R Code:**_ This is the RMD files of the R code to complete the ecological analysis in this thesis. They include (In order to effectively run all the code you must run the files from top to bottom):
+3._**R Code:**_ This is the RMD files of the R code to complete the ecological analysis in this thesis. They include (In order to effectively run all the code you must run the files from top to bottom):
   - **Ecological Analysis Data Cleaning File:** This file includes most of the data cleaning and the MICE method for imputations into the missing polygyny estimates.
   - **Ecological Analysis Phylogenetic Tree Prep:** This file includes all the code to clean and prune the phylogenetic tree.
   - **Ecological Analysis pPCA Latent variable creation:** This file includes the code to conduct a phyolgenetically controlled principal components analysis for the purpose of latent variable creation.
