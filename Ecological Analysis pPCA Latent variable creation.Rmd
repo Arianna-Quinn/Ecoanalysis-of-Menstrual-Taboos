@@ -27,32 +27,77 @@ phylo.Reduced <- readRDS("~/Desktop/Menstrual taboos/R CODE DATA FILES (USE)/phy
 
 ```{r pPCA and scores}
 climate <- scale(subset(full_data, select = MeanMonthlyTemperature:Precipitation_Predictability))
-climate <- as.matrix(climate)
+climate <- as.matrix(climate) #organize for phylo PCA
 ```
 
 ```{r pPCA and scores}
 pPCA <- phyl.pca(phylo.Reduced, climate, mode = "cov", method = "lambda")
-pPCA
+pPCA #initial phylogenetic PCA
+```
+
+```{r}
+#how many PCs to keep? (2) (GIVES SCREE PLOT)
+pa<-fa.parallel(climate, fa="pc", n.iter=1000)
 ```
 
 ```{r pPCA and scores}
-rotation <- GPForth(pPCA$L[,1:2], method = "quartimax")
-C <- vcv.phylo(phylo.Reduced)[rownames(climate), rownames(climate)]
-temp <- phyl.vcv(climate, C, pPCA$lambda)
-a <- t(temp$alpha)
-B <- t(pseudoinverse(rotation$loadings))
+rotation <- GPForth(pPCA$L[,1:2], method = "quartimax") #rotate PCA loadings to enhance interpretation
+rotation
+C <- vcv.phylo(phylo.Reduced)[rownames(climate), rownames(climate)] #calculate ancestral means
+temp <- phyl.vcv(climate, C, pPCA$lambda) #calculate ancestral means
+a <- t(temp$alpha) #calculate ancestral means
+B <- t(pseudoinverse(rotation$loadings)) #calculate rotated pPC scores (ancestral mean centering)
 ```
 
 ```{r pPCA and scores}
 Climate.scores <- data.frame((scale(climate, center = a, scale = FALSE) %*% B))
 Climate.scores$PC1 <- Climate.scores[,1]
 Climate.scores$PC2 <- Climate.scores[,2]
-Climate.scores <- Climate.scores[,c("PC1","PC2")]
+Climate.scores <- Climate.scores[,c("PC1","PC2")] #organize scores
+```
+
+```{r}
+#proportion of variance explained
+#total
+sum(apply(rotation$loadings, 2, function(x) sum(x^2)/nrow(rotation$loadings) ) )
+#PC1
+sum(rotation$loadings[,1]^2)/nrow(rotation$loadings)
+#PC2
+sum(rotation$loadings[,2]^2)/nrow(rotation$loadings)
 ```
 
 ```{r pPCA and scores}
 Combo.df <- cbind(full_data, PC1 = Climate.scores$PC1, PC2 = Climate.scores$PC2)
 ```
+
+```{r}
+library(ggplot2)
+
+# Combine scores and loadings for biplot
+biplot_data <- Climate.scores
+biplot_data$Culture <- rownames(Climate.scores)
+
+loadings <- as.data.frame(rotation$loadings)
+loadings$Variable <- rownames(loadings)
+
+ggplot(biplot_data, aes(x = PC1, y = PC2)) +
+  geom_point(alpha = 0.7) +
+  geom_segment(data = loadings, aes(x = 0, y = 0, xend = PC1 * 3, yend = PC2 * 3), 
+               arrow = arrow(length = unit(0.2, "cm")), color = "red") +
+  geom_text(data = loadings, aes(x = PC1 * 3.2, y = PC2 * 3.2, label = Variable), 
+            color = "red", size = 3.5) +
+  theme_minimal() +
+  labs(title = "pPCA Biplot: Climate Variables", x = "PC1", y = "PC2")
+```
+
+```{r}
+library(corrplot)
+
+corr_matrix <- cor(climate)
+corrplot(corr_matrix, method = "color", type = "upper", 
+         tl.col = "black", addCoef.col = "black", number.cex = 0.7)
+```
+
 
 ```{r save combo}
 saveRDS(Combo.df, "~/Desktop/Menstrual taboos/R CODE DATA FILES (USE)/combo_df.rds")
