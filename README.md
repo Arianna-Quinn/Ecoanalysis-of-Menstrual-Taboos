@@ -1,6 +1,6 @@
 # Ecoanalysis-of-Menstrual-Taboos
 
-This repository is for a manucript in production right now (Will eventually update and put citation and link once there has been a submission and it has been accepted)
+This repository is for a manucript in production right now and all files are needed in order to complete the analysis outlined in the manuscript (I will eventually update and put citation and link once there has been a submission and it has been accepted)
 
 This repository includes:
 
