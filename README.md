@@ -1,6 +1,6 @@
 # Ecoanalysis-of-Menstrual-Taboos
 
-This repository is for a manucript in production right now and all files are needed in order to complete the analysis outlined in the manuscript (I will eventually update and put citation and link once there has been a submission and it has been accepted)
+This repository is for a manucript in production and all files are needed in order to complete the analysis outlined in the manuscript (I will eventually update and put citation and link once there has been a submission and it has been accepted)
 
 This repository includes:
 
@@ -13,4 +13,4 @@ This repository includes:
 - **Ecological Analysis Phylogenetic Tree Prep:** This file includes all the code to clean and prune the phylogenetic tree.
 - **Ecological Analysis pPCA Latent variable creation:** This file includes the code to conduct a phyolgenetically controlled principal components analysis for the purpose of latent variable creation.
 - **Ecological Analysis Phylogenetic Variance:** This file includes the code to calculate the R2 of the phyolgenetic variance. In essence this file calculate the phylogenetic signal.
-- **Ecological Analysis Statisitical Models:** This file includes all the code to conduct the statistical analyses. They include intercept-only models, models without biome (landscape included), and the final models which included all variabels including biome. The statistical models outlined by the article are titled "Presence with Biome" and "Restriction with Biome".
+- **Ecological Analysis Statisitical Models:** This file includes all the code to conduct the statistical analyses. They include intercept-only models, models without biome (landscape included), and the final models which included all variable including biome. The statistical models outlined by the article are titled "Presence with Biome" and "Restriction with Biome".
