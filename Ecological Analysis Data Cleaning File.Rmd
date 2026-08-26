@@ -1,0 +1,34 @@
+---
+title: "Ecological Analysis Data Cleaning"
+output: html_document
+date: "2025-06-26"
+---
+```{r load packages}
+library(phytools)
+library(psych)
+library(GPArotation)
+library(corpcor)
+library(ape)
+library(brms)
+library(geiger)
+library(mice)
+library(tidyverse)
+library(reshape2)
+library(ggridges)
+library(bayesplot)
+library(hexbin)
+```
+
+```{r load data}
+df <- read.csv("~/Desktop/Menstrual taboos/R CODE DATA FILES (USE)/Master's data set.csv", header=TRUE)
+rownames(df) <- df$tip.label
+```
+
+```{r impute}
+imputed_data <- mice(df, method="sample")
+full_data <- complete(imputed_data)
+```
+
+```{r save cleaned}
+saveRDS(full_data, "~/Desktop/Menstrual taboos/R CODE DATA FILES (USE)/full_data.rds")
+```
